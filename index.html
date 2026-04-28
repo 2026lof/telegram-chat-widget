@@ -1,0 +1,127 @@
+<div id="chat-widget">
+  <button id="chat-toggle">💬 Chat</button>
+
+  <div id="chat-box">
+    <div id="chat-header">Chat with us</div>
+
+    <input id="chat-name" placeholder="Your name" />
+    <input id="chat-email" placeholder="Your email" />
+    <textarea id="chat-message" placeholder="Type your message"></textarea>
+
+    <button id="chat-send">Send</button>
+    <div id="chat-status"></div>
+  </div>
+</div>
+
+<style>
+  #chat-widget {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    font-family: Arial, sans-serif;
+    z-index: 9999;
+  }
+
+  #chat-toggle {
+    background: #0088cc;
+    color: white;
+    border: none;
+    padding: 14px 18px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  #chat-box {
+    display: none;
+    width: 320px;
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    padding: 16px;
+    margin-bottom: 10px;
+  }
+
+  #chat-header {
+    font-weight: bold;
+    margin-bottom: 12px;
+    font-size: 18px;
+  }
+
+  #chat-box input,
+  #chat-box textarea {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 10px;
+    box-sizing: border-box;
+  }
+
+  #chat-box textarea {
+    height: 90px;
+  }
+
+  #chat-send {
+    width: 100%;
+    background: #0088cc;
+    color: white;
+    border: none;
+    padding: 12px;
+    cursor: pointer;
+  }
+
+  #chat-status {
+    margin-top: 10px;
+    font-size: 14px;
+  }
+</style>
+
+<script>
+const API_URL = "/.netlify/functions/chat";
+const REPLIES_URL = "http://localhost:3000/api/replies";
+
+let visitorId = localStorage.getItem("visitorId");
+
+if (!visitorId) {
+  visitorId = "v_" + Math.random().toString(36).substring(2, 10);
+  localStorage.setItem("visitorId", visitorId);
+}
+
+document.getElementById("chat-send").onclick = async () => {
+  const name = document.getElementById("chat-name").value;
+  const email = document.getElementById("chat-email").value;
+  const message = document.getElementById("chat-message").value;
+  const status = document.getElementById("chat-status");
+
+  status.innerText = "Sending...";
+
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ visitorId, name, email, message })
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    status.innerText = data.reply;
+    document.getElementById("chat-message").value = "";
+  } else {
+    status.innerText = "Something went wrong.";
+  }
+};
+
+setInterval(async () => {
+  const res = await fetch(`${REPLIES_URL}/${visitorId}`);
+  const data = await res.json();
+
+  if (!data.messages) return;
+
+  const latest = data.messages[data.messages.length - 1];
+
+  if (latest && latest.from === "human") {
+    document.getElementById("chat-status").innerText = latest.text;
+  }
+}, 3000);
+</script>
