@@ -111,4 +111,9 @@ document.getElementById("chat-send").onclick = async () => {
   }
 };
 
+document.getElementById("chat-toggle").onclick = () => {
+  const box = document.getElementById("chat-box");
+  box.style.display = box.style.display === "block" ? "none" : "block";
+};
+
 </script>
