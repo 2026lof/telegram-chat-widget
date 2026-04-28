@@ -77,6 +77,7 @@
 
 <script>
 const API_URL = "/.netlify/functions/chat";
+const REPLIES_URL = "/.netlify/functions/replies";
 
 let visitorId = localStorage.getItem("visitorId");
 
@@ -85,11 +86,21 @@ if (!visitorId) {
   localStorage.setItem("visitorId", visitorId);
 }
 
+document.getElementById("chat-toggle").onclick = () => {
+  const box = document.getElementById("chat-box");
+  box.style.display = box.style.display === "block" ? "none" : "block";
+};
+
 document.getElementById("chat-send").onclick = async () => {
   const name = document.getElementById("chat-name").value;
   const email = document.getElementById("chat-email").value;
   const message = document.getElementById("chat-message").value;
   const status = document.getElementById("chat-status");
+
+  if (!message.trim()) {
+    status.innerText = "Please type a message.";
+    return;
+  }
 
   status.innerText = "Sending...";
 
@@ -98,7 +109,12 @@ document.getElementById("chat-send").onclick = async () => {
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ visitorId, name, email, message })
+    body: JSON.stringify({
+      visitorId,
+      name,
+      email,
+      message
+    })
   });
 
   const data = await res.json();
@@ -111,9 +127,17 @@ document.getElementById("chat-send").onclick = async () => {
   }
 };
 
-document.getElementById("chat-toggle").onclick = () => {
-  const box = document.getElementById("chat-box");
-  box.style.display = box.style.display === "block" ? "none" : "block";
-};
+setInterval(async () => {
+  const res = await fetch(`${REPLIES_URL}?visitorId=${visitorId}`);
+  const data = await res.json();
+
+  if (!data.messages || data.messages.length === 0) return;
+
+  const latest = data.messages[data.messages.length - 1];
+
+  if (latest.from === "human") {
+    document.getElementById("chat-status").innerText = latest.text;
+  }
+}, 3000);
 
 </script>
