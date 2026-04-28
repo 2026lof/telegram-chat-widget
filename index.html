@@ -77,7 +77,6 @@
 
 <script>
 const API_URL = "/.netlify/functions/chat";
-const REPLIES_URL = "http://localhost:3000/api/replies";
 
 let visitorId = localStorage.getItem("visitorId");
 
@@ -112,16 +111,4 @@ document.getElementById("chat-send").onclick = async () => {
   }
 };
 
-setInterval(async () => {
-  const res = await fetch(`${REPLIES_URL}/${visitorId}`);
-  const data = await res.json();
-
-  if (!data.messages) return;
-
-  const latest = data.messages[data.messages.length - 1];
-
-  if (latest && latest.from === "human") {
-    document.getElementById("chat-status").innerText = latest.text;
-  }
-}, 3000);
 </script>
